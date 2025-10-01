@@ -10,7 +10,7 @@ library(tidyverse)
 ```
 
 
-Problem 1
+# Problem 1
 
 1) load and clean pols-month dataset
 ```{r setup}
@@ -30,4 +30,50 @@ pols_month_df =
   select(-prez_gop, -prez_dem) |> 
   select(-day)
 ```
+
+
+2) load and clean snp.csv
+
+```{r}
+
+snp_df = 
+  read_csv("data/fivethirtyeight_datasets/snp.csv", show_col_types = FALSE) |>
+  janitor::clean_names() |> 
+  # 1) split date -> year, month, day)
+  separate(date, 
+           into = c("year","month","day"),
+           sep = "/", fill = "right", convert = TRUE) |> 
+  # 2) month number -> month name (calendar order)
+  mutate(month = factor(month.name[month], levels = month.name, ordered = TRUE)) |> 
+  select(-day) |>
+  # 4) arrange by year, month
+  arrange(year, month) |>
+  # 5) arrange year and month first
+  select(year, month, everything())
+
+```
+
+3) Load and clean unemployment data
+
+```{r}
+unemployment_df = 
+  read_csv("data/fivethirtyeight_datasets/unemployment.csv", show_col_types = FALSE) |>
+  janitor::clean_names() |> 
+  # 1) pivot longer
+  pivot_longer(cols = jan:dec,
+               names_to = "month",
+               values_to = "unemployment_rate") |> 
+  # 2) make month values consistent
+  mutate(
+    month = case_match(month,
+      "jan" ~ "January", "feb" ~ "February", "mar" ~ "March",
+      "apr" ~ "April",   "may" ~ "May",      "jun" ~ "June",
+      "jul" ~ "July",    "aug" ~ "August",   "sep" ~ "September",
+      "oct" ~ "October", "nov" ~ "November", "dec" ~ "December"), 
+    month = factor(month, levels = month.name, ordered = TRUE)
+  ) |> 
+  arrange(year, month) |> 
+  select(year, month, unemployment_rate, everything())
+```
+
 
