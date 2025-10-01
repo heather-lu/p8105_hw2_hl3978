@@ -98,14 +98,12 @@ path <- "data/202509 Trash Wheel Collection Data.xlsx"
 
 # Read and clean Mr. Trash wheel
 
-mr_raw = read_excel(
+mr_cleaned <- read_excel(
   path,
   sheet = "Mr. Trash Wheel",
-  skip = 1,                  # skip the top notes/header row 
+  skip = 1,                   
   na = c("", "NA", "N/A")
-) 
-
-mr_cleaned <- mr_raw |>
+)  |>
   janitor::clean_names() |>
   select(-x15, -x16) |>
   filter(!is.na(dumpster)) |>
@@ -116,14 +114,12 @@ mr_cleaned <- mr_raw |>
 
 # Read and clean professor trash wheel
 
-prof_raw <- read_excel(
+prof_cleaned <- read_excel(
   path,
   sheet = "Professor Trash Wheel",
   skip = 1,
   na = c("", "NA", "N/A")
-)
-
-prof_cleaned <- prof_raw |> 
+) |> 
   janitor::clean_names() |> 
   filter(!is.na(dumpster)) |>
   mutate(wheel = "Professor Trash Wheel"
@@ -132,14 +128,12 @@ prof_cleaned <- prof_raw |>
 
 # Gwynnda
 
-gwyn_raw <- read_excel(
+gwyn_cleaned <- read_excel(
   path,
   sheet = "Gwynns Falls Trash Wheel",
   skip = 1,
   na = c("", "NA", "N/A")
-)
-
-gwyn_cleaned <- gwyn_raw |> 
+) |> 
   janitor::clean_names() |>
   filter(!is.na(dumpster)) |>
   mutate(wheel = "Gwynnda"
@@ -156,10 +150,53 @@ prof_cleaned <- prof_cleaned %>% mutate(year = suppressWarnings(as.integer(year)
 gwyn_cleaned <- gwyn_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
 
 
-trashwheel_all <- bind_rows(mr_cleaned, prof_cleaned, gwyn_cleaned) %>%
-  arrange(wheel, year, month, dumpster) %>%   # consistent order
+trashwheel_all <- bind_rows(mr_cleaned, prof_cleaned, gwyn_cleaned) |> 
+  arrange(wheel, year, month, dumpster) |>    # consistent order
   select(any_of(c("wheel","year","month","date","dumpster")), everything())
 ```
 
+
 Problem #3 
+
+
+Load and clean Zip Codes.csv
+
+```{r}
+zip_df = read_csv("data/zillow_data/Zip Codes.csv", show_col_types = FALSE) |> 
+  janitor::clean_names() |> 
+  distinct(zip_code, .keep_all = TRUE) #remove duplicates for merging
+```
+
+Load and clean Zip NYC
+
+```{r}
+zori_df = read_csv("data/zillow_data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv") |>
+  janitor::clean_names() |> 
+  rename(zip_code = region_name) |>
+  pivot_longer(cols = -c(region_id, size_rank, zip_code, region_type, state_name, state, city, metro, county_name),
+    names_to  = "date_str",
+    values_to = "zori"
+  ) |> 
+  mutate(
+    date_str = sub("^x", "", date_str),         # drop "x"
+    date_str = gsub("_", "-", date_str),        # _ -> -
+    date     = as.Date(date_str, format = "%Y-%m-%d"),
+    year     = as.integer(format(date, "%Y")),
+    month    = factor(format(date, "%B"), levels = month.name, ordered = TRUE),
+    zori     = as.numeric(zori)
+  ) |> 
+  select(
+    zip_code, year, month, date, zori,
+    region_id, size_rank, region_type, state_name, state, city, metro, county_name
+  ) |>
+  arrange(zip_code, year, month)
+```
+Merge zip_df and zori_df
+
+```{r}
+merged_df = zori_df |> 
+  left_join(zip_df, by = "zip_code") |> 
+  relocate(zip_code, year, month, date, zori, .before = 1) |> 
+  arrange(year, month, zip_code)
+```
 
