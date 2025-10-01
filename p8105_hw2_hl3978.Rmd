@@ -7,6 +7,7 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library(readxl)
 ```
 
 
@@ -89,3 +90,76 @@ merged_df =
 5) Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset 
 
 The pols-month dataset contains US political totals by party such as numbers of Republican/Democratic governors, senators, and representatives. It includes a date split into year and month, and gop/dem under the president variable. It spans `r nrow(pols_month_df)` and `r ncol(pols_month_df)`. It spans `r min(pols_month_df$year)`–`r max(pols_month_df$year)` with key variables such as `r toString(names(pols_month_df))`. The snp data contains monthly S&P 500 closing levels with corresponding year and month. It spans `r min(snp_df$year)`–`r max(snp_df$year)` with key variables such as `r toString(names(snp_df))`. The unemployment data reports monthly unemployment rates originally in wide form (one column per month); after pivoting to long/tidy form, it includes variables year, month (full names), and unemployment_rate, covering `r min(unemployment_df$year)`–`r max(unemployment_df$year)` with `r nrow(unemployment_df)`. Merged df contains `r nrow(merged_df)` and covers years `r min(merged_df$year)`–`r max(merged_df$year)`.
+
+# Problem 2
+
+```{r}
+path <- "data/202509 Trash Wheel Collection Data.xlsx"
+
+# Read and clean Mr. Trash wheel
+
+mr_raw = read_excel(
+  path,
+  sheet = "Mr. Trash Wheel",
+  skip = 1,                  # skip the top notes/header row 
+  na = c("", "NA", "N/A")
+) 
+
+mr_cleaned <- mr_raw |>
+  janitor::clean_names() |>
+  select(-x15, -x16) |>
+  filter(!is.na(dumpster)) |>
+  mutate(sports_balls = as.integer(round(sports_balls)),
+    wheel = "Mr. Trash Wheel"
+  ) |>
+  relocate(wheel)
+
+# Read and clean professor trash wheel
+
+prof_raw <- read_excel(
+  path,
+  sheet = "Professor Trash Wheel",
+  skip = 1,
+  na = c("", "NA", "N/A")
+)
+
+prof_cleaned <- prof_raw |> 
+  janitor::clean_names() |> 
+  filter(!is.na(dumpster)) |>
+  mutate(wheel = "Professor Trash Wheel"
+  ) |> 
+  relocate(wheel)
+
+# Gwynnda
+
+gwyn_raw <- read_excel(
+  path,
+  sheet = "Gwynns Falls Trash Wheel",
+  skip = 1,
+  na = c("", "NA", "N/A")
+)
+
+gwyn_cleaned <- gwyn_raw |> 
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |>
+  mutate(wheel = "Gwynnda"
+  ) |> 
+  relocate(wheel)
+
+# Combined trash wheel data
+
+# fix year data type
+mr_cleaned <- mr_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
+
+prof_cleaned <- prof_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
+
+gwyn_cleaned <- gwyn_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
+
+
+trashwheel_all <- bind_rows(mr_cleaned, prof_cleaned, gwyn_cleaned) %>%
+  arrange(wheel, year, month, dumpster) %>%   # consistent order
+  select(any_of(c("wheel","year","month","date","dumpster")), everything())
+```
+
+Problem #3 
+
