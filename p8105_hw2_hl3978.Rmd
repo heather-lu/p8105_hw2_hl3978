@@ -21,7 +21,7 @@ pols_month_df =
   #1) separate mon -> year, month, day
   separate(mon, into = c("year","month","day"), sep = "-", convert = TRUE) |>
   #2) month number-> month name
-  mutate(month = factor(month.name[month], levels = month.name)) |> 
+  mutate(month = factor(month.name[month], levels = month.name, ordered = TRUE)) |> 
   #3) create president 
   mutate(president = case_when(
     prez_gop == 1 ~ "gop",
@@ -41,8 +41,9 @@ snp_df =
   janitor::clean_names() |> 
   # 1) split date -> year, month, day)
   separate(date, 
-           into = c("year","month","day"),
+           into = c("month","day","year"),
            sep = "/", fill = "right", convert = TRUE) |> 
+  mutate(year = if_else(year <= 15, 2000L + year, 1900L + year)) |>
   # 2) month number -> month name (calendar order)
   mutate(month = factor(month.name[month], levels = month.name, ordered = TRUE)) |> 
   select(-day) |>
@@ -76,4 +77,15 @@ unemployment_df =
   select(year, month, unemployment_rate, everything())
 ```
 
+4) join datasets
 
+```{r}
+merged_df =
+  pols_month_df |> 
+  left_join(snp_df, by = c("year", "month")) |> 
+  left_join(unemployment_df, by = c("year", "month"))
+```
+
+5) Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset 
+
+The pols-month dataset contains US political totals by party such as numbers of Republican/Democratic governors, senators, and representatives. It includes a date split into year and month, and gop/dem under the president variable. It spans `r nrow(pols_month_df)` and `r ncol(pols_month_df)`. It spans `r min(pols_month_df$year)`–`r max(pols_month_df$year)` with key variables such as `r toString(names(pols_month_df))`. The snp data contains monthly S&P 500 closing levels with corresponding year and month. It spans `r min(snp_df$year)`–`r max(snp_df$year)` with key variables such as `r toString(names(snp_df))`. The unemployment data reports monthly unemployment rates originally in wide form (one column per month); after pivoting to long/tidy form, it includes variables year, month (full names), and unemployment_rate, covering `r min(unemployment_df$year)`–`r max(unemployment_df$year)` with `r nrow(unemployment_df)`. Merged df contains `r nrow(merged_df)` and covers years `r min(merged_df$year)`–`r max(merged_df$year)`.
