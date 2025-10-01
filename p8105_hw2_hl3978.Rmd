@@ -5,26 +5,29 @@ date: "2025-10-01"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+library(tidyverse)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Problem 1
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+1) load and clean pols-month dataset
+```{r setup}
 
-```{r cars}
-summary(cars)
+pols_month_df = 
+  read_csv("data/fivethirtyeight_datasets/pols-month.csv") |> 
+  janitor::clean_names() |> 
+  #1) separate mon -> year, month, day
+  separate(mon, into = c("year","month","day"), sep = "-", convert = TRUE) |>
+  #2) month number-> month name
+  mutate(month = factor(month.name[month], levels = month.name)) |> 
+  #3) create president 
+  mutate(president = case_when(
+    prez_gop == 1 ~ "gop",
+    prez_dem == 1 ~ "dem")
+    ) |> 
+  select(-prez_gop, -prez_dem) |> 
+  select(-day)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
