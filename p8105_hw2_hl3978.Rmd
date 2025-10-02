@@ -89,7 +89,7 @@ merged_df =
 
 5) Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset 
 
-The pols-month dataset contains US political totals by party such as numbers of Republican/Democratic governors, senators, and representatives. It includes a date split into year and month, and gop/dem under the president variable. It spans `r nrow(pols_month_df)` and `r ncol(pols_month_df)`. It spans `r min(pols_month_df$year)`–`r max(pols_month_df$year)` with key variables such as `r toString(names(pols_month_df))`. The snp data contains monthly S&P 500 closing levels with corresponding year and month. It spans `r min(snp_df$year)`–`r max(snp_df$year)` with key variables such as `r toString(names(snp_df))`. The unemployment data reports monthly unemployment rates originally in wide form (one column per month); after pivoting to long/tidy form, it includes variables year, month (full names), and unemployment_rate, covering `r min(unemployment_df$year)`–`r max(unemployment_df$year)` with `r nrow(unemployment_df)`. Merged df contains `r nrow(merged_df)` and covers years `r min(merged_df$year)`–`r max(merged_df$year)`.
+The pols-month dataset contains US political totals by party such as numbers of Republican/Democratic governors, senators, and representatives. It includes a date split into year and month, and gop/dem under the president variable. It spans `r min(pols_month_df$year)`–`r max(pols_month_df$year)` with key variables such as `r toString(names(pols_month_df))`. The snp data contains monthly S&P 500 closing levels with corresponding year and month. It spans `r min(snp_df$year)`–`r max(snp_df$year)` with key variables such as `r toString(names(snp_df))`. The unemployment data reports monthly unemployment rates originally in wide form (one column per month); after pivoting to long/tidy form, it includes variables year, month (full names), and unemployment_rate, covering `r min(unemployment_df$year)`–`r max(unemployment_df$year)` with `r nrow(unemployment_df)`. Merged df contains `r nrow(merged_df)` and covers years `r min(merged_df$year)`–`r max(merged_df$year)`.
 
 # Problem 2
 
@@ -142,7 +142,7 @@ gwyn_cleaned <- read_excel(
 
 # Combined trash wheel data
 
-# fix year data type
+# fix year data type error
 mr_cleaned <- mr_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
 
 prof_cleaned <- prof_cleaned %>% mutate(year = suppressWarnings(as.integer(year)))
@@ -156,8 +156,8 @@ trashwheel_all <- bind_rows(mr_cleaned, prof_cleaned, gwyn_cleaned) |>
 ```
 
 
-Problem #3 
 
+Problem #3 
 
 Load and clean Zip Codes.csv
 
@@ -200,3 +200,6 @@ merged_df = zori_df |>
   arrange(year, month, zip_code)
 ```
 
+Merged data set description
+
+The merged_df spans `r min(merged_df$year)`–`r max(merged_df$year)` with key variables such as `r paste(names(merged_df), collapse = ", ")`. The merged_df contains `r nrow(merged_df)` observations. The merged_df contains `r length(unique(zori_df$zip_code))` unique zip codes and `r length(unique(zip_df$neighborhood))` unique neighborhoods.
